@@ -9,12 +9,12 @@
     new_username: "{{ lookup('env', 'NEW_USERNAME') }}"
     new_password: "{{ lookup('env', 'NEW_PASSWORD') }}"
     full_name: "{{ lookup('env', 'FULL_NAME') | default(new_username) }}"
-    default_global_role: "user"  # Change to "admin" if needed
+    default_global_role: "user"  
 
   tasks:
     - name: Validate required variables
       fail:
-        msg: "NEW_USERNAME and NEW_PASSWORD are required."
+        msg: "Username and password are required."
       when: new_username == "" or new_password == ""
 
     - name: Create user in Rancher
@@ -31,13 +31,14 @@
           name: "{{ full_name }}"
           enabled: true
         return_content: yes
+        status_code: [200, 201]    
       register: new_user_resp
 
     - name: Parse created user ID
       set_fact:
         new_user_id: "{{ (new_user_resp.json.id) | default('') }}"
 
-    - name: Bind new user to global role
+    - name: Bind user to global role
       uri:
         url: "{{ rancher_api_url }}/v3/globalrolebindings"
         method: POST
@@ -49,3 +50,4 @@
           globalRoleId: "{{ default_global_role }}"
           userId: "{{ new_user_id }}"
         return_content: yes
+        status_code: [200, 201]

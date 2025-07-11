@@ -1,0 +1,42 @@
+name: Create Rancher User
+
+on:
+  workflow_dispatch:
+    inputs:
+      new_username:
+        description: 'Username for new Rancher user'
+        required: true
+      new_password:
+        description: 'Password for new Rancher user'
+        required: true
+      full_name:
+        description: 'Full name (optional)'
+        required: false
+
+jobs:
+  create-user:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python & install Ansible
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install ansible
+          ansible-galaxy collection install -r requirements.yml
+
+      - name: Run Ansible playbook to create Rancher user
+        env:
+          RANCHER_API_URL: ${{ secrets.RANCHER_API_URL }}
+          RANCHER_API_TOKEN: ${{ secrets.RANCHER_API_TOKEN }}
+          NEW_USERNAME: ${{ github.event.inputs.new_username }}
+          NEW_PASSWORD: ${{ github.event.inputs.new_password }}
+          FULL_NAME: ${{ github.event.inputs.full_name }}
+        run: |
+          source venv/bin/activate
+          ansible-playbook create_rancher_user.yml
+

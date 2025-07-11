@@ -29,7 +29,7 @@ jobs:
         source venv/bin/activate
         pip install --upgrade pip
         pip install ansible
-        ansible-galaxy collection install community.general
+        ansible-galaxy collection install -r requirements.yml
 
     - name: Run playbook to create Rancher user
       run: |
